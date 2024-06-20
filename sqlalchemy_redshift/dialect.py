@@ -809,7 +809,28 @@ class RedshiftDialectMixin(DefaultDialect):
 
             return result.scalar()
         except Exception as e:
-            if "Operation not supported on external tables" in str(e):
+            # Gracefully handle external tables
+            schema_filter = (
+                "AND schemaname = '{schema}'".format(schema=schema)
+                if schema else ""
+            )
+            result = connection.execute(
+                sa.text(
+                    """
+                    SELECT
+                        1
+                    FROM svv_external_tables
+                    WHERE
+                        tablename = '{table_name}'
+                        {schema_filter}
+                    LIMIT 1;
+                    """.format(
+                        schema_filter=schema_filter,
+                        table_name=table_name
+                    )
+                )
+            )
+            if result.scalar() is not None:
                 return None
             raise e
 
