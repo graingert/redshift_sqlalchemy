@@ -792,21 +792,47 @@ class RedshiftDialectMixin(DefaultDialect):
     @reflection.cache
     def get_table_oid(self, connection, table_name, schema=None, **kw):
         """Fetch the oid for schema.table_name.
-        Return null if not found (external table does not have table oid)"""
+        Return None if not found (external table does not have table oid)"""
         schema_field = '"{schema}".'.format(schema=schema) if schema else ""
 
-        result = connection.execute(
-            sa.text(
-                """
-                select '{schema_field}"{table_name}"'::regclass::oid;
-                """.format(
-                    schema_field=schema_field,
-                    table_name=table_name
+        try:
+            result = connection.execute(
+                sa.text(
+                    """
+                    select '{schema_field}"{table_name}"'::regclass::oid;
+                    """.format(
+                        schema_field=schema_field,
+                        table_name=table_name
+                    )
                 )
             )
-        )
 
-        return result.scalar()
+            return result.scalar()
+        except Exception as e:
+            # Gracefully handle external tables
+            schema_filter = (
+                "AND schemaname = '{schema}'".format(schema=schema)
+                if schema else ""
+            )
+            result = connection.execute(
+                sa.text(
+                    """
+                    SELECT
+                        1
+                    FROM svv_external_tables
+                    WHERE
+                        tablename = '{table_name}'
+                        {schema_filter}
+                    LIMIT 1;
+                    """.format(
+                        schema_filter=schema_filter,
+                        table_name=table_name
+                    )
+                )
+            )
+            if result.scalar() is not None:
+                return None
+            raise e
 
     @reflection.cache
     def get_pk_constraint(self, connection, table_name, schema=None, **kw):
