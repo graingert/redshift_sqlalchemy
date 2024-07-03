@@ -1368,9 +1368,8 @@ class RedshiftDialect_redshift_connector(RedshiftDialectMixin, PGDialect):
         fns = []
 
         def on_connect(conn):
-            from sqlalchemy import util
             from sqlalchemy.sql.elements import quoted_name
-            conn.py_types[quoted_name] = conn.py_types[util.text_type]
+            conn.py_types[quoted_name] = conn.py_types[str]
 
         fns.append(on_connect)
 
