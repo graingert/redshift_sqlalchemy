@@ -21,7 +21,7 @@ setup(
     install_requires=[
         # requires sqlalchemy.sql.base.DialectKWArgs.dialect_options, new in
         # version 0.9.2
-        'SQLAlchemy>=0.9.2,<2.0.0',
+        'SQLAlchemy>=0.9.2,<3.0.0',
         'packaging',
     ],
     classifiers=[
