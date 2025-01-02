@@ -1,8 +1,7 @@
 0.8.15 (unreleased)
 -------------------
 
-- Nothing changed yet.
-
+- SQLAlchemy 2.0 support
 
 0.8.14 (2023-04-07)
 -------------------
